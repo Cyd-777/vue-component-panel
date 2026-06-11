@@ -1,0 +1,91 @@
+{
+  "_comment": "手动导出时：Figma 变体名 → 本地文件名。导出后按「文件名」列重命名保存。",
+  "figmaNodes": {
+    "alignMatrixSet": "405:21",
+    "alignDotReference": "404:134",
+    "alignHoverReference": "405:86"
+  },
+  "dot": {
+    "dot-start-start": "左上",
+    "dot-center-start": "上",
+    "dot-end-start": "右上",
+    "dot-start-center": "左",
+    "dot-center-center": "居中",
+    "dot-end-center": "右",
+    "dot-start-end": "左下",
+    "dot-center-end": "下",
+    "dot-end-end": "右下"
+  },
+  "hover": {
+    "hover-start-start": "左上",
+    "hover-center-start": "上",
+    "hover-end-start": "右上",
+    "hover-start-center": "左",
+    "hover-center-center": "居中",
+    "hover-end-center": "右",
+    "hover-start-end": "左下",
+    "hover-center-end": "下",
+    "hover-end-end": "右下"
+  },
+  "userExportFolder": "/Users/cyd-777/Downloads/未命名文件夹 3",
+  "userExportSyncedAt": "2026-06-03",
+  "userExportFiles": {
+    "layout": [
+      "Property 1=默认.svg",
+      "Property 1=flex.svg",
+      "Property 1=grid.svg"
+    ],
+    "spacing": [
+      "方向=上.svg",
+      "方向=下.svg",
+      "方向=左.svg",
+      "方向=右.svg",
+      "方向=上下.svg",
+      "方向=左右.svg",
+      "方向=四向.svg"
+    ],
+    "alignHoverEdges": [
+      "方向=上.svg",
+      "方向=下.svg",
+      "方向=左.svg",
+      "方向=右.svg"
+    ],
+    "alignHoverCornersGenerated": [
+      "hover-start-start",
+      "hover-end-start",
+      "hover-start-end",
+      "hover-end-end",
+      "hover-center-center"
+    ],
+    "notImported": "模式=*（flex 主轴示意）、icon 类型=间距/flex 排序、用处=* 等 — 编辑器暂无对应控件"
+  },
+  "alignMatrixModes": {
+    "vertical": {
+      "files": [
+        "模式=垂直方向, 对齐方向=在.svg",
+        "模式=垂直方向, 对齐方向=中.svg",
+        "模式=垂直方向, 对齐方向=右.svg"
+      ],
+      "when": "default / flex 纵向 / grid 等（默认）",
+      "axis": "按列 contentAlign.x"
+    },
+    "horizontal": {
+      "files": [
+        "模式=水平方向, 对齐方向=上.svg",
+        "模式=水平方向, 对齐方向=中.svg",
+        "模式=水平方向, 对齐方向=下.svg"
+      ],
+      "when": "flex 横向且未换行",
+      "axis": "按行 contentAlign.y"
+    },
+    "wrap": {
+      "files": [
+        "模式=自动换行, 对齐方向=在.svg",
+        "模式=自动换行, 对齐方向=中.svg",
+        "模式=自动换行, 对齐方向=右.svg"
+      ],
+      "when": "flex 开启换行",
+      "axis": "按列 contentAlign.x"
+    }
+  }
+}

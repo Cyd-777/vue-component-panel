@@ -1,0 +1,20 @@
+{
+  "fileKey": "anusHmRhqVdaZAzEwhAPbb",
+  "alignMatrixSet": "405:21",
+  "alignDotIcon": "404:134",
+  "alignHoverIcon": "405:86",
+  "downloadUrls": {
+    "hover": {},
+    "dot": {}
+  },
+  "paddingDirectionSet": "409:36",
+  "paddingSymbols": {
+    "top": "409:33",
+    "bottom": "409:37",
+    "left": "409:49",
+    "right": "409:53",
+    "vertical": "409:61",
+    "horizontal": "409:69",
+    "linked": "409:80"
+  }
+}
