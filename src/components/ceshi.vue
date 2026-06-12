@@ -8,7 +8,7 @@
 </template>
 
 <script setup lang="ts">
-import LayoutContainer from './LayoutContainer.vue'
+import LayoutContainer from '../modules/layout-container/LayoutContainer.vue'
 </script>
 
 <style scoped>

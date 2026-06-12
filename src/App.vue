@@ -14,7 +14,7 @@ const router = useRouter()
 
 const navItems = [
   { value: 'library', label: '组件库', path: '/library' },
-  { value: 'styles', label: '全局样式', path: '/styles' },
+  { value: 'styles', label: '全局样式规范', path: '/styles' },
   { value: 'editor', label: '组件画板', path: '/editor' },
 ] as const
 

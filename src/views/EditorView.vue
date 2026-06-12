@@ -3393,8 +3393,8 @@ function centerStageInView() {
 
 watch([previewComp, isEditMode, showCode], () => centerStageInView())
 
-watch([componentCode, previewRoot], ([code, root]) => {
-  syncPreviewStyleSheet(code, root)
+watch([componentCode, previewRoot, isEditMode], ([code, root, edit]) => {
+  syncPreviewStyleSheet(code, root, { interactionLive: !edit })
 })
 
 watch(previewRoot, (el, _, onCleanup) => {
@@ -3626,16 +3626,17 @@ function deleteSelectedTags() {
           v-else-if="interactionState === 'motion' && selectedId"
           class="editor__canvas-banner editor__canvas-banner--motion"
         >
-          编辑动效 · 切换悬停 / 按下 / 聚焦态时将应用过渡；在示例预览中交互查看
+          编辑动效 · 画板不模拟指针交互；在示例预览中查看真实过渡
         </div>
         <div
           v-else-if="interactionStateUsesCanvasPreview(interactionState) && selectedId"
           class="editor__canvas-banner editor__canvas-banner--interaction"
         >
-          画布预览「{{ interactionStateLabel(interactionState) }}」· 选中元素
+          Tab 强制预览「{{ interactionStateLabel(interactionState) }}」样式 · 指针交互不生效
           <span v-if="!interactionStateHasCanvasOverrides" class="editor__canvas-banner-muted">
             （未配置覆盖，与默认一致）
           </span>
+          <span class="editor__canvas-banner-muted"> · 真实交互请用示例预览</span>
         </div>
       </div>
       <aside v-if="isEditMode" class="editor__props">

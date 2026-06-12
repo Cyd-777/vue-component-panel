@@ -15,25 +15,56 @@ export function extractStyleBlockInner(code: string): string {
   return m?.[1]?.trim() ?? ''
 }
 
+function addImportantToRuleBody(body: string): string {
+  return body.replace(/([^;\n{][^;{}]*?);/g, (_match, decl: string) => {
+    const trimmed = decl.trim()
+    if (!trimmed || trimmed.includes('!important')) return `${decl};`
+    return `  ${trimmed} !important;`
+  })
+}
+
+/** 画板编辑态：去掉 :hover/:active/:focus 规则，避免指针真实交互干扰编辑 */
+export function stripInteractionPseudoRules(css: string): string {
+  return css
+    .replace(/\n?\.fp-el-\d+:(?:hover|active|focus-visible|focus)\s+\.fp-el-\d+\s*\{[^}]*\}/g, '')
+    .replace(/\n?\.fp-el-\d+:(?:hover|active|focus-visible|focus)\s*\{[^}]*\}/g, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+}
+
 /** 交互态伪类需盖过 template inline / 组件 props 内联样式 */
 export function preparePseudoRulesForRuntime(css: string): string {
-  return css.replace(
-    /(\.fp-el-\d+:(?:hover|active|focus-visible|focus)\s*\{)([\s\S]*?)(\})/g,
-    (_full, open: string, body: string, close: string) => {
-      const nextBody = body.replace(/([^;\n{][^;{}]*?);/g, (_match, decl: string) => {
-        const trimmed = decl.trim()
-        if (!trimmed || trimmed.includes('!important')) return `${decl};`
-        return `  ${trimmed} !important;`
-      })
-      return `${open}${nextBody}${close}`
-    },
-  )
+  const selfRule =
+    /(\.fp-el-\d+:(?:hover|active|focus-visible|focus)\s*\{)([\s\S]*?)(\})/g
+  const compoundRule =
+    /(\.fp-el-\d+:(?:hover|active|focus-visible|focus)\s+\.fp-el-\d+\s*\{)([\s\S]*?)(\})/g
+  return css
+    .replace(selfRule, (_full, open: string, body: string, close: string) => {
+      return `${open}${addImportantToRuleBody(body)}${close}`
+    })
+    .replace(compoundRule, (_full, open: string, body: string, close: string) => {
+      return `${open}${addImportantToRuleBody(body)}${close}`
+    })
+}
+
+export interface SyncPreviewStyleSheetOptions {
+  /**
+   * true：指针悬停/按下触发伪类（示例预览、交互逻辑模式）
+   * false：不注入伪类规则，由 Tab 强制预览（画板组件样式编辑）
+   */
+  interactionLive?: boolean
 }
 
 /** 画布 / 示例预览注入 SFC style 块（伪类等 scoped 规则在 livePreview 模板编译外生效） */
-export function syncPreviewStyleSheet(code: string, mountEl: HTMLElement | null): void {
+export function syncPreviewStyleSheet(
+  code: string,
+  mountEl: HTMLElement | null,
+  options: SyncPreviewStyleSheetOptions = {},
+): void {
   if (!mountEl) return
-  const inner = preparePseudoRulesForRuntime(extractStyleBlockInner(code))
+  const { interactionLive = true } = options
+  const raw = extractStyleBlockInner(code)
+  const inner = interactionLive ? preparePseudoRulesForRuntime(raw) : stripInteractionPseudoRules(raw)
   let el = mountEl.querySelector(`#${PREVIEW_STYLE_ID}`) as HTMLStyleElement | null
   if (!inner) {
     el?.remove()

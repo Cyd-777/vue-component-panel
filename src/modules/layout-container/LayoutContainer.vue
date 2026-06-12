@@ -174,6 +174,10 @@ function applyStyleEntry(base: CSSProperties, key: string, value: string) {
     base.textAlign = value as CSSProperties['textAlign']
   } else if (k === 'text-decoration') {
     base.textDecoration = value
+  } else if (k === 'display') {
+    base.display = value as CSSProperties['display']
+  } else if (k === 'visibility') {
+    base.visibility = value as CSSProperties['visibility']
   }
 }
 

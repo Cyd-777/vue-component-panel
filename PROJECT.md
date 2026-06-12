@@ -17,6 +17,20 @@ Flow Panel 是一个**可视化组件开发平台**（Visual Component Developme
 其他功能（全局样式、文档编辑器、组件清单列表）是这两个核心分区的能力集成。  
 在此基础上要具备全局样式定义（实现样式统一管理）、组件注册清单（实现组件一站式注册管理）、组件文档及文档编辑器（能够使用当前组件库中的组件进行自定义编写组件文档，一定程度上实现自洽）
 
+### Bootstrap 与 TDesign
+
+组件库项目最终要做到**用自己**：规范、画板、文档、导出组件都消费自家 registry 与 token。搭建初期则存在悖论——要先有规范页才能定 token，而规范页又需要组件来预览（「砖由房子自己产，房子还没盖」）。
+
+因此引入 **TDesign Vue Next**，用途限定为两点，**不是**把 TDesign 当作 Flow Panel 的组件库定义：
+
+| 目的 | 说明 |
+|------|------|
+| **参考** | 基础组件形态、状态、语义色与 `--td-*` token 结构的对照样本 |
+| **过渡** | 在自家组件尚未入库前，支撑 `/styles` 设置 Tab 的可视预览与主题验证 |
+
+**替换策略：** 以 [styles-spec 组件设置清单](src/modules/styles-spec/docs/COMPONENT_SETTINGS_CATALOG.md) 为准，逐项实现自家组件；每组件 **API.md 声明全部样式 CSS 变量**（见 [COMPONENT_API_DOC_SPEC.md](src/modules/styles-spec/docs/COMPONENT_API_DOC_SPEC.md)）；AI 辅助开发使用 [AI_META_PROMPT.md](src/modules/styles-spec/docs/AI_META_PROMPT.md)。某条 ready 后，该条预览与 binding 从 `<t-*>` 切到自家实现，TDesign 在该条上退场。  
+**长期边界：** 画板导出、组件 registry、文档编辑器不以 TDesign 为依赖；TDesign 主要占用全局样式规范页的预览脚手架。模块内详述见 [STYLES_SPEC.md](src/modules/styles-spec/STYLES_SPEC.md) §二。
+
 ---
 
 ## 二、框架策略
@@ -105,7 +119,7 @@ Flow Panel 是一个**可视化组件开发平台**（Visual Component Developme
 | ---------- | ------------------------- | --- | ----------------------------------------------- |
 | **语言**     | TypeScript 6              | ✅   | `tsconfig.json` 已配置，`vue-tsc` 类型检查通过            |
 | **框架**     | Vue 3.5 + Composition API | ✅   | `<script setup lang="ts">`                      |
-| **UI 组件库** | TDesign Vue Next 1.20     | ✅   | Button、Tabs、Select、t-layout 等，已在 App.vue 中使用    |
+| **UI 组件库** | TDesign Vue Next 1.20     | ✅   | **过渡脚手架**：规范页预览 + 参考；见 §一 Bootstrap 与 TDesign |
 | **代码编辑器**  | Monaco Editor 0.55        | ✅   | CodeEditor.vue 已封装，代码面板可用                       |
 | **Vue 编译** | `@vue/compiler-dom`       | ✅   | `sceneCodegen.ts` 中使用，`baseParse` 可运行           |
 | **拖拽**     | Pointer Events API        | ✅   | `pointerDragSession.ts` 中封装，SpacingDragDemo 已验证 |
@@ -308,11 +322,11 @@ App 壳 + 顶栏 Tab
 ├── /library  组件库（LibraryView）
 │   ├── [Tab] 组件示例文档（DocsView）
 │   │         模式：浏览 · 编辑（规划，页内切换）
-│   ├── [Tab] 组件注册清单（InventoryView）
-│   │         模式：浏览 · 编辑条目（规划，页内或行内）
-│   └── [Tab] 全局样式定义（StylesView）
-│             [子 Tab] 色板 · 字体 · Icon · 样式
-│             模式：浏览 · 编辑 token（规划，页内切换）
+│   └── [Tab] 组件注册清单（InventoryView）
+│             模式：浏览 · 编辑条目（规划，页内或行内）
+│
+├── /styles   全局样式规范（modules/styles-spec）  ← 详见模块 STYLES_SPEC.md
+│             [子 Tab] 项目色板 · 尺寸尺度 · 字体 · 效果 · 动效 · WCAG · 设置 · Icon
 │
 └── /editor   组件画板（EditorView）
               模式：组件样式 · 交互逻辑（页内切换，非子路由）
@@ -327,7 +341,7 @@ App 壳 + 顶栏 Tab
 | 组件库         | `/library`              | ✅              |
 | 组件示例文档      | Library Tab `docs`      | 🔶 mock 列表     |
 | 组件注册清单      | Library Tab `inventory` | ✅              |
-| 全局样式        | Library Tab `styles`    | 🔶 只读展示        |
+| 全局样式规范      | `/styles` styles-spec 模块 | ✅ 见 modules/styles-spec |
 | 组件画板        | `/editor`               | ✅              |
 | 组件样式 / 交互逻辑 | Editor 工具栏切换            | ✅ 样式 · 🔶 逻辑闭环 |
 

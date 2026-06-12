@@ -20,9 +20,9 @@ export interface FlowInteractionStateSpec {
 
 export const FLOW_INTERACTION_STATES: FlowInteractionStateSpec[] = [
   { id: 'default', label: '默认', shortLabel: '默', hint: '常态样式 · inline / 组件属性' },
-  { id: 'hover', label: '悬停', shortLabel: '悬', hint: ':hover · 指针位于元素上' },
-  { id: 'active', label: '按下', shortLabel: '按', hint: ':active · 鼠标按下' },
-  { id: 'focus', label: '聚焦', shortLabel: '聚', hint: ':focus-visible · 键盘聚焦' },
+  { id: 'hover', label: '悬停', shortLabel: '悬', hint: '触发区 :hover · 可见性等多用于父级悬停时子元素变化' },
+  { id: 'active', label: '按下', shortLabel: '按', hint: '触发区 :active · 按下时子元素样式' },
+  { id: 'focus', label: '聚焦', shortLabel: '聚', hint: '触发区 :focus-visible · 聚焦时子元素样式' },
   { id: 'motion', label: '动效', shortLabel: '动', hint: '过渡 / 动画 · 状态切换时生效' },
 ]
 

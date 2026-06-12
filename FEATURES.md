@@ -3,7 +3,7 @@
 > 查阅当前已实现能力、部分完成项与待做项。  
 > 交互细节与优先级定义见 [PROJECT.md](./PROJECT.md) 第七节；架构与分区规划见 [PROJECT.md](./PROJECT.md) 第一、二节。
 
-**最后同步：** 2026-06-07（含 grid 插入/stamp/粘贴坐标、§8.1 完结）
+**最后同步：** 2026-06-07（含全局样式规范 STYLES_SPEC、尺寸尺度、使用规范主题设置）
 
 ---
 
@@ -35,8 +35,24 @@
 | 文档示例 | 🔶 | 左侧组件列表 + 右侧占位内容；数据为 mock | `DocsView.vue` |
 | 组件注册清单 — 全局 | ✅ | 读取 `global.json`，展示 tag / 名称 / 路径，支持移除 | `InventoryView.vue` · `componentRegistry.ts` |
 | 组件注册清单 — 页面局部 | ✅ | 按 `pages/*.json` 切换页面，展示局部注册 | `InventoryView.vue` |
-| 全局样式 — 色板 | 🔶 | 展示 TDesign token 色板（只读展示） | `StylesView.vue` |
-| 全局样式 — 字体 / Icon / 圆角阴影 | 🔶 | 静态展示，未联动编辑器 | `StylesView.vue` |
+
+---
+
+## 二 A、全局样式规范（`/styles`）
+
+> 独立模块 `src/modules/styles-spec/` · 框架见 **[STYLES_SPEC.md](./src/modules/styles-spec/STYLES_SPEC.md)**。
+
+| 功能 | 状态 | 说明 | 入口 / 模块 |
+| --- | --- | --- | --- |
+| 页面壳与 Tab 导航 | ✅ | 定义层 → 约束 → 应用层 | `StylesView.vue` |
+| 项目色板 | ✅ | 功能色阶、中性色；写入色彩 token | `ColorPaletteMatrix.vue` · `colorPaletteStore.ts` |
+| 尺寸尺度 | ✅ | 间距、圆角、布局尺寸 token | `DimensionSpecPanel.vue` · `designTokenStore.ts` |
+| 字体 / 效果 / 动效 — 命名样式 | ✅ | 命名集合 CRUD，注入 `.flow-style-*` | `StyleEditorPanel.vue` · `stylePresetStore.ts` |
+| WCAG 对比度 | ✅ | 说明、尺寸对照表、计算器 | `WcagContrastPanel.vue` |
+| 设置 — 组件主题绑定 | 🚧 | Button 范本：五语义色×交互态、统一圆角/边框/效果/动效、尺寸字体 | `componentThemeBindingDefs.ts` · `UsageSpecSettingsPanel.vue` |
+| 设置 — 组件预览 | ✅ | 按组件分组（颜色/效果/动效/字体等维度） | `UsageSpecPanel.vue` |
+| Icon 一览 | ✅ | TDesign 图标静态预览 | `StylesView.vue` |
+| 规范单文件导出 / 画板全量引用 | ⬜ | 后续；见 STYLES_SPEC §七 | — |
 
 ---
 

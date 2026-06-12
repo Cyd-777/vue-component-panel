@@ -1,4 +1,4 @@
-export type TokenGroup = 'color' | 'fonts' | 'spacing' | 'radius' | 'motion'
+export type TokenGroup = 'color' | 'fonts' | 'spacing' | 'radius' | 'layout' | 'motion'
 
 export type TokenFieldType = 'color' | 'px' | 'fontFamily' | 'fontWeight' | 'enum' | 'string'
 
@@ -22,6 +22,7 @@ export interface DesignTokenValues {
   successColor: string
   warningColor: string
   errorColor: string
+  infoColor: string
   textPrimary: string
   textSecondary: string
   bgPage: string
@@ -55,6 +56,9 @@ export interface DesignTokenValues {
   spacingUnit: string
   spacingMd: string
   spacingLg: string
+  layoutPadding: string
+  layoutGap: string
+  layoutSectionGap: string
   radiusSmall: string
   radiusDefault: string
   radiusMedium: string
@@ -70,6 +74,7 @@ export const DEFAULT_TOKEN_VALUES: DesignTokenValues = {
   successColor: '#2BA471',
   warningColor: '#E37318',
   errorColor: '#D54941',
+  infoColor: '#697586',
   textPrimary: 'rgba(0, 0, 0, 0.9)',
   textSecondary: 'rgba(0, 0, 0, 0.6)',
   bgPage: '#EEEEEE',
@@ -103,6 +108,9 @@ export const DEFAULT_TOKEN_VALUES: DesignTokenValues = {
   spacingUnit: '4',
   spacingMd: '16',
   spacingLg: '24',
+  layoutPadding: '16',
+  layoutGap: '12',
+  layoutSectionGap: '24',
   radiusSmall: '2',
   radiusDefault: '3',
   radiusMedium: '6',
@@ -146,6 +154,15 @@ export const DESIGN_TOKEN_DEFS: DesignTokenDef[] = [
     group: 'color',
     type: 'color',
     default: DEFAULT_TOKEN_VALUES.errorColor,
+  },
+  {
+    key: 'infoColor',
+    cssVar: '--flow-info-color',
+    label: 'Info 功能色',
+    group: 'color',
+    type: 'color',
+    default: DEFAULT_TOKEN_VALUES.infoColor,
+    description: 'Info 语义功能色；与 Primary 混合生成中性色倾向',
   },
   {
     key: 'textPrimary',
@@ -507,14 +524,14 @@ export const DESIGN_TOKEN_DEFS: DesignTokenDef[] = [
   {
     key: 'spacingUnit',
     cssVar: '--td-size-2',
-    label: '基础间距 (4px 档)',
+    label: '基数单位',
     group: 'spacing',
     type: 'px',
     default: DEFAULT_TOKEN_VALUES.spacingUnit,
     min: 2,
-    max: 8,
+    max: 12,
     step: 1,
-    description: '用于推算 8 / 12 / 16 等间距',
+    description: '间距滑动条的步进基准；其它项为其整数倍',
   },
   {
     key: 'spacingMd',
@@ -537,6 +554,42 @@ export const DESIGN_TOKEN_DEFS: DesignTokenDef[] = [
     min: 16,
     max: 48,
     step: 2,
+  },
+  {
+    key: 'layoutPadding',
+    cssVar: '--flow-layout-padding',
+    label: '容器内边距',
+    group: 'layout',
+    type: 'px',
+    default: DEFAULT_TOKEN_VALUES.layoutPadding,
+    min: 0,
+    max: 48,
+    step: 2,
+    description: 'LayoutContainer 等布局容器默认 padding',
+  },
+  {
+    key: 'layoutGap',
+    cssVar: '--flow-layout-gap',
+    label: '布局间距',
+    group: 'layout',
+    type: 'px',
+    default: DEFAULT_TOKEN_VALUES.layoutGap,
+    min: 0,
+    max: 32,
+    step: 2,
+    description: 'Flex / Grid 行列间距（column-gap / row-gap）',
+  },
+  {
+    key: 'layoutSectionGap',
+    cssVar: '--flow-layout-section-gap',
+    label: '区块间距',
+    group: 'layout',
+    type: 'px',
+    default: DEFAULT_TOKEN_VALUES.layoutSectionGap,
+    min: 8,
+    max: 64,
+    step: 4,
+    description: '页面区块、模块之间的垂直间距',
   },
   {
     key: 'radiusSmall',
@@ -630,6 +683,7 @@ export const TOKEN_GROUP_LABELS: Record<TokenGroup, string> = {
   fonts: '字体',
   spacing: '间距',
   radius: '圆角',
+  layout: '布局尺寸',
   motion: '动效',
 }
 

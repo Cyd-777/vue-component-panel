@@ -1,6 +1,7 @@
 import { watch } from 'vue'
 import { applyDesignTokensNow } from './designTokenStore'
-import { coerceColorValue, generateBrandScale } from './colorUtils'
+import { coerceColorValue, generateScaleAtStep } from './colorUtils'
+import { getMainStepForColumn } from './colorPaletteSettings'
 import {
   BRAND_SCALE_SLOTS,
   type ColorPaletteSlot,
@@ -70,15 +71,37 @@ export function getBrandScaleSlot(step: number): ColorPaletteSlot {
   return BRAND_SCALE_SLOTS[step - 1]
 }
 
-/** 色阶展示色：有手动覆盖用覆盖，否则由品牌主色自动生成 */
+/** 色阶展示色：有手动覆盖用覆盖，否则由主色 + 主色阶自动生成 */
 export function getEffectiveBrandScaleColor(step: number): string {
   const slot = getBrandScaleSlot(step)
   const override = colorPaletteOverrides[slot.id]
   if (override?.trim()) return coerceColorValue(override)
   const brand = designTokenState.brandColor?.trim() || '#0052d9'
-  return generateBrandScale(brand)[step - 1] ?? brand
+  const mainStep = getMainStepForColumn('primary')
+  return generateScaleAtStep(brand, mainStep)[step - 1] ?? brand
 }
 
 export function isBrandScaleOverridden(step: number): boolean {
   return !!colorPaletteOverrides[`brand-${step}`]?.trim()
+}
+
+export function getEffectiveSemanticScaleColor(
+  columnId: string,
+  scalePrefix: string | undefined,
+  step: number,
+  mainColor: string,
+): string {
+  if (scalePrefix === 'brand') return getEffectiveBrandScaleColor(step)
+  const slotId = scalePrefix ? `${scalePrefix}-${step}` : null
+  if (slotId && colorPaletteOverrides[slotId]?.trim()) {
+    return coerceColorValue(colorPaletteOverrides[slotId])
+  }
+  const mainStep = getMainStepForColumn(columnId)
+  return generateScaleAtStep(mainColor, mainStep)[step - 1] ?? mainColor
+}
+
+export function isSemanticScaleOverridden(scalePrefix: string | undefined, step: number): boolean {
+  if (scalePrefix === 'brand') return isBrandScaleOverridden(step)
+  if (!scalePrefix) return false
+  return !!colorPaletteOverrides[`${scalePrefix}-${step}`]?.trim()
 }

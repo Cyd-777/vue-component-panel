@@ -212,5 +212,6 @@ function selectDoc(id: string) {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  background: #fff;
 }
 </style>

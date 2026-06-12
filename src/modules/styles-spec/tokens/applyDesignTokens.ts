@@ -1,11 +1,12 @@
 import { getColorPaletteOverrideVars } from './colorPaletteOverrides'
+import { getMainStepForColumn } from './colorPaletteSettings'
 import { DESIGN_TOKEN_DEFS, type DesignTokenValues } from './designTokenDefs'
 import {
   coerceColorValue,
-  generateBrandScale,
+  generateScaleAtStep,
   isRgbColor,
-  mixHex,
   normalizeHex,
+  scaleStateIndices,
 } from './colorUtils'
 
 const STYLE_ID = 'flow-panel-design-tokens'
@@ -21,38 +22,70 @@ function lineHeightFor(fontSize: number): number {
 }
 
 function collectBrandVars(vars: Record<string, string>, brandRaw: string) {
+  const mainStep = getMainStepForColumn('primary')
   const main = normalizeHex(brandRaw)
-  const scale = generateBrandScale(main)
+  const scale = generateScaleAtStep(main, mainStep)
+  const idx = scaleStateIndices(mainStep)
+
   scale.forEach((color, index) => {
     vars[`--td-brand-color-${index + 1}`] = color
   })
-  vars['--td-brand-color'] = main
-  vars['--td-brand-color-7'] = main
-  vars['--td-brand-color-hover'] = scale[5] ?? main
-  vars['--td-brand-color-active'] = scale[7] ?? main
-  vars['--td-brand-color-focus'] = scale[1] ?? main
-  vars['--td-brand-color-light'] = scale[0] ?? main
-  vars['--td-brand-color-light-hover'] = scale[1] ?? main
-  vars['--td-brand-color-disabled'] = scale[2] ?? main
-  vars['--td-text-color-brand'] = main
-  vars['--td-text-color-link'] = scale[7] ?? main
+  vars['--td-brand-color'] = scale[idx.main] ?? main
+  vars['--td-brand-color-7'] = scale[6] ?? main
+  vars['--td-brand-color-hover'] = scale[idx.hover] ?? main
+  vars['--td-brand-color-active'] = scale[idx.active] ?? main
+  vars['--td-brand-color-focus'] = scale[idx.focus] ?? main
+  vars['--td-brand-color-light'] = scale[idx.light] ?? main
+  vars['--td-brand-color-light-hover'] = scale[idx.lightHover] ?? main
+  vars['--td-brand-color-disabled'] = scale[idx.disabled] ?? main
+  vars['--td-text-color-brand'] = scale[idx.main] ?? main
+  vars['--td-text-color-link'] = scale[idx.active] ?? main
+}
+
+function collectSemanticScaleVars(
+  vars: Record<string, string>,
+  kind: 'success' | 'warning' | 'error',
+  columnId: string,
+  raw: string,
+) {
+  const color = coerceColorValue(raw)
+  if (isRgbColor(color)) {
+    vars[`--td-${kind}-color`] = color
+    return
+  }
+  const mainStep = getMainStepForColumn(columnId)
+  const main = normalizeHex(color)
+  const scale = generateScaleAtStep(main, mainStep)
+  const idx = scaleStateIndices(mainStep)
+
+  for (let i = 1; i <= 10; i += 1) {
+    vars[`--td-${kind}-color-${i}`] = scale[i - 1] ?? main
+  }
+  vars[`--td-${kind}-color`] = scale[idx.main] ?? main
+  vars[`--td-${kind}-color-hover`] = scale[idx.hover] ?? main
+  vars[`--td-${kind}-color-active`] = scale[idx.active] ?? main
+  vars[`--td-${kind}-color-light`] = scale[idx.light] ?? main
+}
+
+function collectInfoScaleVars(vars: Record<string, string>, raw: string) {
+  const mainStep = getMainStepForColumn('info')
+  const main = normalizeHex(coerceColorValue(raw))
+  const scale = generateScaleAtStep(main, mainStep)
+  const idx = scaleStateIndices(mainStep)
+
+  for (let i = 1; i <= 10; i += 1) {
+    vars[`--flow-info-color-${i}`] = scale[i - 1] ?? main
+  }
+  vars['--flow-info-color'] = scale[idx.main] ?? main
 }
 
 function collectSemanticVars(
   vars: Record<string, string>,
   key: 'success' | 'warning' | 'error',
   raw: string,
+  columnId: string,
 ) {
-  const color = coerceColorValue(raw)
-  if (isRgbColor(color)) {
-    vars[`--td-${key}-color`] = color
-    return
-  }
-  const main = normalizeHex(color)
-  vars[`--td-${key}-color`] = main
-  vars[`--td-${key}-color-hover`] = mixHex(main, '#ffffff', 0.12)
-  vars[`--td-${key}-color-active`] = mixHex(main, '#000000', 0.1)
-  vars[`--td-${key}-color-light`] = mixHex(main, '#ffffff', 0.88)
+  collectSemanticScaleVars(vars, key, columnId, raw)
 }
 
 function formatOptionalPx(value: string): string {
@@ -118,6 +151,12 @@ function collectFontVars(vars: Record<string, string>, values: DesignTokenValues
   vars['--td-font-headline-small'] = `${wBold} ${headline}px / ${headlineLh}px ${family}`
 }
 
+function collectLayoutVars(vars: Record<string, string>, values: DesignTokenValues) {
+  vars['--flow-layout-padding'] = px(values.layoutPadding)
+  vars['--flow-layout-gap'] = px(values.layoutGap)
+  vars['--flow-layout-section-gap'] = px(values.layoutSectionGap)
+}
+
 function collectSpacingVars(vars: Record<string, string>, values: DesignTokenValues) {
   const unit = Number(values.spacingUnit)
   const md = Number(values.spacingMd)
@@ -166,9 +205,10 @@ export function buildDesignTokenCssVars(values: DesignTokenValues): Record<strin
   const vars: Record<string, string> = {}
 
   collectBrandVars(vars, v.brandColor)
-  collectSemanticVars(vars, 'success', v.successColor)
-  collectSemanticVars(vars, 'warning', v.warningColor)
-  collectSemanticVars(vars, 'error', v.errorColor)
+  collectSemanticVars(vars, 'success', v.successColor, 'success')
+  collectSemanticVars(vars, 'warning', v.warningColor, 'warning')
+  collectSemanticVars(vars, 'error', v.errorColor, 'danger')
+  collectInfoScaleVars(vars, v.infoColor)
 
   vars['--td-text-color-primary'] = coerceColorValue(v.textPrimary)
   vars['--td-text-color-secondary'] = coerceColorValue(v.textSecondary)
@@ -179,6 +219,7 @@ export function buildDesignTokenCssVars(values: DesignTokenValues): Record<strin
 
   collectFontVars(vars, v)
   collectSpacingVars(vars, v)
+  collectLayoutVars(vars, v)
 
   vars['--td-radius-small'] = px(v.radiusSmall)
   vars['--td-radius-default'] = px(v.radiusDefault)

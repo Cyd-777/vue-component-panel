@@ -3,7 +3,8 @@
  * PropsPanel — 属性面板（t1：结构化控件 + 全部属性）
  */
 import { computed, ref, watch } from 'vue'
-import ScrubInput from './ScrubInput.vue'
+import ScrubInput from '../../components/ScrubInput.vue'
+import BezierCurvePanel from '../../components/BezierCurvePanel.vue'
 import {
   getTagAttrEntries,
   getTagAttrsFromCode,
@@ -68,9 +69,12 @@ import {
   getStoredPaddingLinkMode,
   setStoredPaddingLinkMode,
 } from './paddingLinkModeStore'
-import { resolveColorForPicker } from '../../tokens/colorUtils'
-import { getTokenValue } from '../../tokens/designTokenStore'
-import { getPresetsByCategory, getStylePresetById } from '../../tokens/stylePresetStore'
+import {
+  getPresetsByCategory,
+  getStylePresetById,
+  getTokenValue,
+  resolveColorForPicker,
+} from '../styles-spec/publicApi'
 import {
   FLOW_INTERACTION_STATES,
   interactionStateLabel,
@@ -80,10 +84,20 @@ import {
   readInteractionOverrides,
   writeInteractionOverrides,
 } from './pseudoClassStyle'
+import {
+  getVisibilityTriggerIndex,
+  isTargetHiddenByDefault,
+  listVisibilityTriggerOptions,
+  readVisibilityOverrides,
+  resolveInteractionShowStyles,
+  visibilityTriggerLabel,
+  writeVisibilityInteraction,
+} from './visibilityInteraction'
 import { readMotionRule, writeMotionRule } from './motionStyle'
 import {
   MOTION_PROPERTY_PRESETS,
   MOTION_TIMING_OPTIONS,
+  motionTimingOptionId,
   type MotionPropertyPresetId,
   type MotionTimingId,
 } from './motionStyleSpec'
@@ -215,15 +229,29 @@ function setMotionDurationMs(ms: number) {
 
 function motionTiming(): MotionTimingId {
   const raw = motionStyles.value['transition-timing-function'] ?? 'ease'
-  return MOTION_TIMING_OPTIONS.some((o) => o.id === raw) ? (raw as MotionTimingId) : 'ease'
+  const id = motionTimingOptionId(raw)
+  return MOTION_TIMING_OPTIONS.some((o) => o.id === id) ? (id as MotionTimingId) : 'ease'
 }
 
 function setMotionTiming(id: MotionTimingId) {
+  const option = MOTION_TIMING_OPTIONS.find((o) => o.id === id)
   patchMotionStyles((styles) => {
     if (motionDurationMs() <= 0) ensureMotionBasics(styles)
-    styles['transition-timing-function'] = id
+    styles['transition-timing-function'] = option?.cssValue ?? id
     delete styles.transition
   })
+}
+
+function setMotionTimingCss(raw: string) {
+  patchMotionStyles((styles) => {
+    if (motionDurationMs() <= 0) ensureMotionBasics(styles)
+    styles['transition-timing-function'] = raw
+    delete styles.transition
+  })
+}
+
+function motionTimingCssValue(): string {
+  return motionStyles.value['transition-timing-function'] ?? 'ease'
 }
 
 function motionDelayMs(): number {
@@ -1267,6 +1295,96 @@ function setClipContent(on: boolean) {
   if (on) setAttr('overflow', 'hidden', false)
   else removeAttr('overflow')
 }
+
+/** 可见性：显示 / display:none（不占位）/ visibility:hidden（占位） */
+type ElementVisibilityMode = 'visible' | 'hidden-none' | 'hidden-keep'
+
+const VISIBILITY_MODE_OPTIONS: { id: ElementVisibilityMode; label: string }[] = [
+  { id: 'visible', label: '显示' },
+  { id: 'hidden-none', label: '隐藏·不占位' },
+  { id: 'hidden-keep', label: '隐藏·占位' },
+]
+
+function cssVisibilityValue(raw: string): string {
+  return raw.replace(/\s*!important\s*$/i, '').trim()
+}
+
+function elementVisibilityMode(): ElementVisibilityMode {
+  if (isDefaultState.value) {
+    const styles = parseInlineStyle(getAttr('style'))
+    if (cssVisibilityValue(styles.display ?? '') === 'none') return 'hidden-none'
+    if (cssVisibilityValue(styles.visibility ?? '') === 'hidden') return 'hidden-keep'
+    return 'visible'
+  }
+  const vis = readVisibilityOverrides(props.code, tagIndex.value!, props.interactionState)
+  if (cssVisibilityValue(vis.display ?? '') === 'none') return 'hidden-none'
+  if (cssVisibilityValue(vis.visibility ?? '') === 'hidden') return 'hidden-keep'
+  return 'visible'
+}
+
+const visibilityTriggerOptions = computed(() => {
+  if (tagIndex.value == null) return []
+  return listVisibilityTriggerOptions(props.code, tagIndex.value)
+})
+
+const visibilityTriggerIndex = computed(() => {
+  if (tagIndex.value == null || isDefaultState.value) return null
+  return getVisibilityTriggerIndex(props.code, tagIndex.value, props.interactionState)
+})
+
+function visibilityStylesForMode(mode: ElementVisibilityMode): Record<string, string> {
+  if (mode === 'hidden-none') return { display: 'none' }
+  if (mode === 'hidden-keep') return { visibility: 'hidden' }
+  if (isDefaultState.value || tagIndex.value == null) return {}
+  return resolveInteractionShowStyles(props.code, tagIndex.value)
+}
+
+function commitDefaultVisibility(mode: ElementVisibilityMode) {
+  const styles = parseInlineStyle(getAttr('style'))
+  delete styles.display
+  delete styles.visibility
+  Object.assign(styles, visibilityStylesForMode(mode))
+  const formatted = formatInlineStyle(styles)
+  if (formatted) setAttr('style', formatted, false)
+  else removeAttr('style')
+}
+
+function commitInteractionVisibility(mode: ElementVisibilityMode) {
+  if (tagIndex.value == null || isDefaultState.value) return
+  const trigger =
+    visibilityTriggerIndex.value ??
+    getVisibilityTriggerIndex(props.code, tagIndex.value, props.interactionState)
+  emit(
+    'update:code',
+    writeVisibilityInteraction(
+      props.code,
+      tagIndex.value,
+      props.interactionState,
+      trigger,
+      visibilityStylesForMode(mode),
+    ),
+  )
+}
+
+function setElementVisibilityMode(mode: ElementVisibilityMode) {
+  if (isDefaultState.value) commitDefaultVisibility(mode)
+  else commitInteractionVisibility(mode)
+}
+
+function setVisibilityTrigger(triggerIndex: number) {
+  if (tagIndex.value == null || isDefaultState.value) return
+  const mode = elementVisibilityMode()
+  emit(
+    'update:code',
+    writeVisibilityInteraction(
+      props.code,
+      tagIndex.value,
+      props.interactionState,
+      triggerIndex,
+      visibilityStylesForMode(mode),
+    ),
+  )
+}
 </script>
 
 <template>
@@ -1289,6 +1407,64 @@ function setClipContent(on: boolean) {
         <span class="pp__state-banner-hint">{{ interactionStateHint }}</span>
       </div>
 
+      <section v-if="!isMotionState" class="pp-section">
+        <header class="pp-section__head">
+          <h3 class="pp-section__title">可见性</h3>
+        </header>
+        <div class="pp-section__body">
+          <div v-if="!isDefaultState" class="pp__row">
+            <span class="pp__row-label">触发区</span>
+            <select
+              class="pp__input pp__input--grow"
+              :value="visibilityTriggerIndex ?? ''"
+              @change="setVisibilityTrigger(Number(($event.target as HTMLSelectElement).value))"
+            >
+              <option
+                v-for="opt in visibilityTriggerOptions"
+                :key="opt.index"
+                :value="opt.index"
+              >
+                {{ opt.label }}{{ opt.isDefault ? '（默认）' : '' }}
+              </option>
+            </select>
+          </div>
+          <div class="pp__row pp__row--stack">
+            <span class="pp__row-label">{{ isDefaultState ? '默认' : '该态下' }}</span>
+            <div class="pp__seg pp__seg--wrap">
+              <button
+                v-for="opt in VISIBILITY_MODE_OPTIONS"
+                :key="opt.id"
+                type="button"
+                class="pp__seg-btn pp__seg-btn--sm"
+                :class="{ 'pp__seg-btn--active': elementVisibilityMode() === opt.id }"
+                :title="opt.id === 'hidden-none' ? 'display: none' : opt.id === 'hidden-keep' ? 'visibility: hidden' : isDefaultState ? '默认显示' : '继承默认（清除本态覆盖）'"
+                @click="setElementVisibilityMode(opt.id)"
+              >{{ opt.label }}</button>
+            </div>
+            <p class="pp__row-hint">
+              <template v-if="isDefaultState">
+                组件常态下的显隐；不占位 <code>display: none</code>，占位 <code>visibility: hidden</code>。
+              </template>
+              <template v-else>
+                当<strong>触发区</strong>处于「{{ interactionStateLabel(interactionState) }}」时，<strong>当前元素</strong>的显隐。
+                例：默认隐藏的操作钮，父容器悬停时选「显示」。触发区默认取父容器。
+                <template v-if="isTargetHiddenByDefault(code, tagIndex!)">
+                  当前元素默认已隐藏，本态「显示」会强制露出。
+                </template>
+              </template>
+            </p>
+            <p
+              v-if="!isDefaultState && visibilityTriggerIndex != null && tagIndex != null"
+              class="pp__row-hint pp__row-hint--accent"
+            >
+              {{ visibilityTriggerLabel(code, tagIndex, visibilityTriggerIndex) }}
+              · {{ interactionStateLabel(interactionState) }}
+              → 当前元素
+            </p>
+          </div>
+        </div>
+      </section>
+
       <section v-if="isMotionState && (isLayoutContainer || isSpan)" class="pp-section">
         <header class="pp-section__head">
           <h3 class="pp-section__title">动效</h3>
@@ -1305,7 +1481,7 @@ function setClipContent(on: boolean) {
               @update:model-value="setMotionDurationMs($event)"
             />
           </div>
-          <div class="pp__row">
+          <div class="pp__row pp__row--stack">
             <span class="pp__row-label">缓动</span>
             <select
               class="pp__input"
@@ -1315,6 +1491,11 @@ function setClipContent(on: boolean) {
             >
               <option v-for="t in MOTION_TIMING_OPTIONS" :key="t.id" :value="t.id">{{ t.label }}</option>
             </select>
+            <BezierCurvePanel
+              :model-value="motionTimingCssValue()"
+              :disabled="motionDurationMs() <= 0"
+              @update:model-value="setMotionTimingCss"
+            />
           </div>
           <div class="pp__row">
             <span class="pp__row-label">延迟</span>
@@ -2209,6 +2390,24 @@ function setClipContent(on: boolean) {
   margin-top: 0;
   padding-top: 0;
   border-top: none;
+}
+
+.pp__row-hint {
+  margin: 0;
+  font-size: 10px;
+  line-height: 1.45;
+  color: var(--td-text-color-placeholder);
+}
+
+.pp__row-hint code {
+  font-size: 10px;
+  padding: 0 3px;
+  border-radius: 3px;
+  background: var(--td-bg-color-secondarycontainer);
+}
+
+.pp__row-hint--accent {
+  color: var(--td-brand-color);
 }
 
 .pp__head {

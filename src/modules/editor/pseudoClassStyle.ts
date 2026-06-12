@@ -10,6 +10,7 @@ import {
   type FlowInteractionStateId,
 } from './interactionStateSpec'
 import { motionStateHasOverrides } from './motionStyle'
+import { visibilityStateHasOverrides } from './visibilityInteraction'
 
 export function pseudoScopeClass(tagIndex: number): string {
   return `fp-el-${tagIndex}`
@@ -67,6 +68,13 @@ export function hasAnyPseudoRulesForElement(code: string, tagIndex: number): boo
   return new RegExp(`\\.fp-el-${tagIndex}:`).test(block.inner)
 }
 
+function stripVisibilityKeys(styles: Record<string, string>): Record<string, string> {
+  const next = { ...styles }
+  delete next.display
+  delete next.visibility
+  return next
+}
+
 export function interactionStateHasOverrides(
   code: string,
   tagIndex: number,
@@ -75,7 +83,8 @@ export function interactionStateHasOverrides(
   if (state === 'motion') return motionStateHasOverrides(code, tagIndex)
   const pseudo = interactionStateToCssPseudo(state)
   if (!pseudo) return false
-  return Object.keys(readPseudoRule(code, tagIndex, pseudo)).length > 0
+  if (visibilityStateHasOverrides(code, tagIndex, state)) return true
+  return Object.keys(stripVisibilityKeys(readPseudoRule(code, tagIndex, pseudo))).length > 0
 }
 
 function hasBaseScopeRule(code: string, tagIndex: number): boolean {

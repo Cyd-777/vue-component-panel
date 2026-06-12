@@ -17,7 +17,7 @@
 
 <script setup lang="ts">
 import Ceshi from './ceshi.vue'
-import LayoutContainer from './LayoutContainer.vue'
+import LayoutContainer from '../modules/layout-container/LayoutContainer.vue'
 </script>
 
 <style scoped>

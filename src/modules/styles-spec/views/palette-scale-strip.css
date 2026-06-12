@@ -1,0 +1,44 @@
+/** 色板色阶条 — 一体式（阶与阶紧挨，外缘圆角） */
+.palette-scale-strip {
+  display: flex;
+  overflow: hidden;
+  border-radius: var(--td-radius-medium);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.palette-scale-strip--vertical {
+  flex-direction: column;
+}
+
+.palette-scale-strip--horizontal {
+  flex-direction: row;
+}
+
+.palette-scale-strip--horizontal.palette-scale-strip--size-md {
+  height: 120px;
+}
+
+.palette-scale-strip__cell {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+}
+
+.palette-scale-strip__cell--fail {
+  box-shadow: inset 0 0 0 2px var(--td-error-color);
+}
+
+.palette-scale-strip__cell--main {
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.65);
+}
+
+.palette-scale-strip__cell--main.palette-scale-strip__cell--fail {
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 255, 255, 0.65),
+    inset 0 0 0 4px color-mix(in srgb, var(--td-error-color) 70%, transparent);
+}
+
+.palette-scale-strip__cell--overridden {
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--td-brand-color) 45%, transparent);
+}

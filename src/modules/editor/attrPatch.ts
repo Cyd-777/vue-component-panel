@@ -85,7 +85,11 @@ export function parseInlineStyle(style: string): Record<string, string> {
     const colon = trimmed.indexOf(':')
     if (colon <= 0) continue
     const key = trimmed.slice(0, colon).trim().toLowerCase()
-    const value = trimmed.slice(colon + 1).trim()
+    const value = trimmed
+      .slice(colon + 1)
+      .trim()
+      .replace(/\s*!important\s*$/i, '')
+      .trim()
     if (key) out[key] = value
   }
   return out
